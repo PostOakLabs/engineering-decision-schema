@@ -1,0 +1,65 @@
+{
+  "$schema": "https://postoaklabs.github.io/engineering-decision-schema/episode.schema.json",
+  "episode_id": "EXAMPLE-EP-REPRODUCED-001",
+  "provenance": "synthetic-fixture",
+  "design": {
+    "name": "ibex",
+    "rtl_commit": "FIXTURE-not-a-real-commit",
+    "pdk": "sky130A",
+    "pdk_commit": "FIXTURE-not-a-real-commit"
+  },
+  "environment": {
+    "librelane_version": "FIXTURE-not-a-real-version",
+    "openroad_version": "FIXTURE-not-a-real-version",
+    "yosys_version": "FIXTURE-not-a-real-version"
+  },
+  "prior_state": {
+    "stage": "detailed_routing",
+    "metrics": {
+      "wns_ns": -1.11,
+      "tns_ns": -222.0,
+      "overflow_pct": 11.0,
+      "utilization": 0.44,
+      "wirelength_um": 111111.0,
+      "cell_count": 11111
+    }
+  },
+  "observation": {
+    "metric": "overflow_pct",
+    "value": 11.0,
+    "target": 0.0,
+    "severity": "blocking"
+  },
+  "hypothesis": "FIXTURE: hypothesis text lives here; this file is validator food, not a recorded decision.",
+  "candidates_considered": [
+    {
+      "intervention": "FIXTURE: a candidate that was considered and rejected",
+      "rejected_because": "FIXTURE: reason it was rejected"
+    },
+    {
+      "intervention": "FIXTURE: the candidate that was taken",
+      "rejected_because": null
+    }
+  ],
+  "chosen_intervention": {
+    "parameter": "FP_CORE_UTIL",
+    "before": 75,
+    "after": 40
+  },
+  "post_state": {
+    "stage": "detailed_routing",
+    "metrics": {
+      "wns_ns": -0.22,
+      "tns_ns": -33.0,
+      "overflow_pct": 0.0,
+      "utilization": 0.44,
+      "wirelength_um": 222222.0,
+      "cell_count": 11111
+    }
+  },
+  "expert_assessment": "inconclusive",
+  "rationale": "FIXTURE: rationale text lives here; this file is validator food, not a recorded decision.",
+  "confidence": 0.0,
+  "failure_class": "FAIL_CONGESTION",
+  "run_manifest_ref": "FIXTURE-not-a-real-run-id"
+}

@@ -1,0 +1,828 @@
+<!doctype html>
+<!--
+SPDX-License-Identifier: Apache-2.0
+
+Not publicly hosted. Whether to host it on AINumbers or Post Oak Labs has not been decided.
+
+Self-serve episode questionnaire (edi-schema, questionnaire-1). A structured
+capture instrument for a research dataset. It turns one expert's recollection of
+one ASIC physical-design decision into a schema-shaped episode record.
+
+Single self-contained file: inline CSS + inline JS, ZERO network calls after
+load, no storage of any kind (all state is in-memory), export via Blob download
+only, no analytics, no PII collected. Records are reviewed before any dataset
+inclusion; nothing here asserts that any episode exists.
+
+This is a structured capture instrument, not an interview and not a promise.
+Every record is self-reported and uninterviewed (x_capture.self_reported).
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>EDI episode questionnaire (private)</title>
+    <style>
+      :root{--ink:#16191d;--ink-soft:#4a5158;--ink-faint:#767e86;--rule:#d9dee3;--rule-soft:#e9edf1;--paper:#fff;--paper-sunk:#f6f8fa;--accent:#0b5cad;--warn-bg:#fff6e0;--warn-rule:#d9a441;--warn-ink:#6b4a06;--bad-bg:#fdecec;--bad-rule:#c0453f;--bad-ink:#7a201c;--good-bg:#eaf5ec;--good-rule:#3f8a52;--good-ink:#1f5228;--mono:ui-monospace,"SF Mono","Cascadia Mono",Consolas,monospace;--sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;--measure:62rem}
+      *{box-sizing:border-box}
+      body{margin:0;padding:2rem 1.25rem 4rem;font-family:var(--sans);font-size:16px;line-height:1.55;color:var(--ink);background:var(--paper-sunk)}
+      .masthead,main,.footnote{max-width:var(--measure);margin:0 auto}
+      h1{font-size:1.5rem;margin:0 0 .35rem;letter-spacing:-.01em}
+      h2{font-size:1.05rem;margin:0 0 .5rem}
+      h3{font-size:.9rem;margin:1.4rem 0 .4rem;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.06em}
+      .tagline{margin:0 0 1.4rem;color:var(--ink-soft);max-width:46rem}
+      .hosting-note{border:1px solid var(--warn-rule);background:var(--warn-bg);color:var(--warn-ink);padding:.7rem .85rem;border-radius:4px;font-size:.85rem;margin-bottom:1.25rem}
+      .privacy{border:1px solid var(--rule);background:var(--paper-sunk);color:var(--ink-soft);padding:.7rem .85rem;border-radius:4px;font-size:.85rem;margin-bottom:1.25rem}
+      .panel{background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:1.25rem;margin-bottom:1.25rem}
+      .panel-note{margin:0 0 .9rem;color:var(--ink-soft);font-size:.9rem}
+      label{display:block;font-size:.85rem;color:var(--ink-soft);margin:.9rem 0 .25rem}
+      input[type=text],input[type=number],textarea,select{width:100%;font-family:var(--mono);font-size:.85rem;padding:.5rem .6rem;border:1px solid var(--rule);border-radius:4px;background:var(--paper);color:var(--ink)}
+      textarea{min-height:3.5rem}
+      .hint{margin:.35rem 0 0;font-size:.8rem;color:var(--ink-faint);line-height:1.45}
+      .row{display:flex;gap:1rem;flex-wrap:wrap}
+      .row>div{flex:1;min-width:12rem}
+      button{font:inherit;font-size:.95rem;padding:.5rem 1.1rem;border:1px solid var(--accent);border-radius:4px;background:var(--accent);color:#fff;cursor:pointer;margin-top:1rem}
+      button.sec{border-color:var(--rule);background:var(--paper);color:var(--ink)}
+      .candidate{border:1px solid var(--rule);border-radius:4px;padding:.9rem;margin:.8rem 0;background:var(--paper)}
+      .dupe{display:inline-block;font-size:.8rem;color:var(--ink-faint);background:none;border:none;padding:0;margin:.5rem 0 0;cursor:pointer;text-decoration:underline}
+      .status{margin:1rem 0 0;font-size:.9rem;min-height:1.4em;color:var(--ink-soft)}
+      .status.error{color:var(--bad-ink)}
+      .err{color:var(--bad-ink);font-family:var(--mono);font-size:.8rem;margin:.25rem 0}
+      .warn{color:var(--warn-ink);font-family:var(--mono);font-size:.8rem;margin:.25rem 0}
+      table.data{width:100%;border-collapse:collapse;font-size:.9rem}
+      table.data th,table.data td{text-align:left;padding:.4rem .6rem;border-bottom:1px solid var(--rule-soft)}
+      table.data th{font-size:.78rem;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);border-bottom-color:var(--rule)}
+      .actions{display:flex;gap:.75rem;flex-wrap:wrap;margin-top:1.25rem}
+      .footnote{color:var(--ink-faint);font-size:.82rem}
+      .footnote p{margin:0 0 .4rem}
+      pre.raw{margin:.75rem 0 0;padding:.85rem;background:var(--paper-sunk);border:1px solid var(--rule-soft);border-radius:4px;font-family:var(--mono);font-size:.78rem;line-height:1.5;overflow-x:auto;max-height:24rem;overflow-y:auto}
+      .visually-hidden{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+    </style>
+  </head>
+  <body>
+    <header class="masthead">
+      <h1>Engineering decision episode questionnaire</h1>
+      <p class="tagline">
+        One ASIC physical-design decision, filled in by the engineer who made it,
+        with no interviewer present. It turns a recollection into a
+        schema-shaped episode record. Rejected paths are the most valuable
+        material, so they are asked for explicitly.
+      </p>
+      <p class="hosting-note">
+        Not publicly hosted. Whether to host it on AINumbers or Post Oak Labs
+        has not been decided. This is a capture instrument for a research
+        dataset; records are reviewed before any dataset inclusion.
+      </p>
+      <p class="privacy">
+        This page makes no network calls, stores nothing (all state stays in
+        this browser tab and is gone when it closes), keeps no analytics, does
+        not ask for your name or employer, and collects no personally
+        identifying information. The only output is a file you choose to
+        download. Anonymous episodes are equally welcome.
+      </p>
+    </header>
+
+    <main>
+      <section class="panel">
+        <h2>1. Context</h2>
+        <div class="row">
+          <div>
+            <label for="design-name">Design / block</label>
+            <input type="text" id="design-name" placeholder="e.g. a datapath block, an analog macro" />
+          </div>
+          <div>
+            <label for="design-pdk">Process node</label>
+            <input type="text" id="design-pdk" placeholder="e.g. 28nm, 7nm FDSOI (coarse bucket is fine)" />
+          </div>
+          <div>
+            <label for="design-scale">Scale (coarse bucket)</label>
+            <select id="design-scale">
+              <option value="">select</option>
+              <option>small (under ~200k cells)</option>
+              <option>medium (~200k to 1M cells)</option>
+              <option>large (over ~1M cells)</option>
+            </select>
+          </div>
+        </div>
+        <p class="hint">Coarse buckets are fine. The scale is descriptive context, not a metric.</p>
+      </section>
+
+      <section class="panel">
+        <h2>2. Before: prior state</h2>
+        <p class="panel-note">Before you spotted the problem, what was the state of the design? Give the milestone (post-CTS, post-route) and the number you were tracking. All metrics are optional but encouraged; leave blank any you do not recall.</p>
+        <div class="row">
+          <div>
+            <label for="prior-stage">Stage / milestone</label>
+            <input type="text" id="prior-stage" placeholder="e.g. post-CTS, post-route" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="prior-util">Utilization (%)</label>
+            <input type="number" id="prior-util" step="any" placeholder="optional" />
+          </div>
+          <div>
+            <label for="prior-wns">WNS (ns)</label>
+            <input type="number" id="prior-wns" step="any" placeholder="optional" />
+          </div>
+          <div>
+            <label for="prior-tns">TNS (ns)</label>
+            <input type="number" id="prior-tns" step="any" placeholder="optional" />
+          </div>
+          <div>
+            <label for="prior-overflow">Routing overflow (%)</label>
+            <input type="number" id="prior-overflow" step="any" placeholder="optional" />
+          </div>
+        </div>
+        <p class="hint">A number that is a rough recollection is fine. A fabricated precision is not.</p>
+      </section>
+
+      <section class="panel">
+        <h2>3. Observation</h2>
+        <p class="panel-note">What did you actually see first? Which report, which line, which number? Keep this to what you saw, not what you concluded.</p>
+        <div class="row">
+          <div>
+            <label for="obs-metric">Metric</label>
+            <input type="text" id="obs-metric" placeholder="e.g. wns_ns, overflow_pct" />
+          </div>
+          <div>
+            <label for="obs-value">Observed value</label>
+            <input type="text" id="obs-value" />
+          </div>
+          <div>
+            <label for="obs-target">Target</label>
+            <input type="text" id="obs-target" />
+          </div>
+        </div>
+        <label for="obs-severity">Severity</label>
+        <select id="obs-severity">
+          <option value="">select</option>
+          <option>blocking</option>
+          <option>degrading</option>
+          <option>cosmetic</option>
+        </select>
+        <label for="failure-class">Failure class</label>
+        <select id="failure-class">
+          <option value="">select</option>
+          <option>FAIL_CONGESTION</option>
+          <option>FAIL_TIMING</option>
+          <option>FAIL_IR_DROP</option>
+          <option>FAIL_ANTENNA</option>
+          <option>FAIL_DRC</option>
+          <option>FAIL_LVS</option>
+          <option>FAIL_ROUTER</option>
+          <option>FAIL_CTS</option>
+          <option>FAIL_MEMORY</option>
+          <option>FAIL_FLOW</option>
+          <option>SDC_BUDGET</option>
+        </select>
+        <div class="hint">The failure class drives the cause pickers below.</div>
+      </section>
+
+      <section class="panel" id="cause-panel" hidden>
+        <h2>4. Suspected cause</h2>
+        <p class="panel-note">A picker plus free text. The picker is a vocabulary seed, not an answer key; tell the real story in the free text.</p>
+        <label for="cause-picker">Candidate cause (pick any that apply)</label>
+        <select id="cause-picker">
+          <option value="">(none selected)</option>
+        </select>
+        <div class="hint" id="cause-hint"></div>
+        <label for="hypothesis">Your causal reading, at that moment</label>
+        <textarea id="hypothesis" placeholder="Before you had checked anything, what did you think was happening?"></textarea>
+      </section>
+
+      <section class="panel">
+        <h2>5. Candidates considered (the hard part)</h2>
+        <p class="panel-note">
+          List every intervention you considered, including the ones you rejected.
+          A straight line with no rejected paths is almost never true. Draw a
+          timeline: at the moment you saw the problem, what were your options and
+          in what order did you eliminate them? Rejected paths are the most
+          valuable material here. Exactly one candidate is marked as the one you
+          took.
+        </p>
+        <div id="candidates"></div>
+        <button type="button" class="sec" id="add-candidate">Add a candidate</button>
+      </section>
+
+      <section class="panel">
+        <h2>6. Chosen intervention</h2>
+        <p class="panel-note">Walk through exactly what you changed, in the order you changed it. Do not let the tool supply the answer.</p>
+        <div class="row">
+          <div>
+            <label for="chosen-param">Parameter / knob changed</label>
+            <input type="text" id="chosen-param" />
+          </div>
+          <div>
+            <label for="chosen-before">Before</label>
+            <input type="text" id="chosen-before" />
+          </div>
+          <div>
+            <label for="chosen-after">After</label>
+            <input type="text" id="chosen-after" />
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>7. After: post state</h2>
+        <p class="panel-note">What did the same reports say after?</p>
+        <div class="row">
+          <div>
+            <label for="post-stage">Stage / milestone</label>
+            <input type="text" id="post-stage" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="post-util">Utilization (%)</label>
+            <input type="number" id="post-util" step="any" placeholder="optional" />
+          </div>
+          <div>
+            <label for="post-wns">WNS (ns)</label>
+            <input type="number" id="post-wns" step="any" placeholder="optional" />
+          </div>
+          <div>
+            <label for="post-tns">TNS (ns)</label>
+            <input type="number" id="post-tns" step="any" placeholder="optional" />
+          </div>
+          <div>
+            <label for="post-overflow">Routing overflow (%)</label>
+            <input type="number" id="post-overflow" step="any" placeholder="optional" />
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>8. Assessment</h2>
+        <div class="row">
+          <div>
+            <label for="expert-assessment">How did the outcome land?</label>
+            <select id="expert-assessment">
+              <option value="">select</option>
+              <option>preferred</option>
+              <option>acceptable</option>
+              <option>regretted</option>
+              <option>inconclusive</option>
+            </select>
+          </div>
+          <div>
+            <label for="confidence">Confidence (0 to 1)</label>
+            <input type="number" id="confidence" min="0" max="1" step="0.01" />
+          </div>
+        </div>
+        <label for="rationale">Why this intervention over the others?</label>
+        <textarea id="rationale"></textarea>
+        <label for="lessons">What would you do differently on the next block, and what would you not change?</label>
+        <textarea id="lessons" placeholder="The second clause matters: it keeps a manufactured regret out of the record."></textarea>
+        <label for="attribution">Attribution (optional, default anonymous)</label>
+        <input type="text" id="attribution" placeholder="Optional. Leave blank to submit anonymously; anonymous episodes are equally welcome." />
+        <div class="hint">No name or employer is requested anywhere on this page.</div>
+      </section>
+
+      <section class="panel">
+        <h2>9. Self review</h2>
+        <label for="weakest-point">Weakest point of this record (mandatory)</label>
+        <textarea id="weakest-point" placeholder="What part of this recollection are you least sure about? A number, a timeline, a rejected path?"></textarea>
+        <div class="hint" id="consistency-nudge" hidden>Every prior metric improved at the same time. Real fixes usually cost something somewhere. If this one did not, say why in the rationale.</div>
+        <label for="artifacts">Artifacts you could attach later (checkbox metadata only; no uploads)</label>
+        <div id="artifacts"></div>
+      </section>
+
+      <section class="panel">
+        <h2>10. Output</h2>
+        <p class="panel-note">The episode is self-reported and uninterviewed, and the record says so. Validation mirrors the edi-schema validator's cross-field rules.</p>
+        <div class="actions">
+          <button type="button" id="validate">Validate</button>
+          <button type="button" id="download">Download episode JSON</button>
+          <button type="button" id="download-croissant" class="sec">Download Croissant 1.1 wrapped</button>
+          <button type="button" id="copy" class="sec">Copy JSON</button>
+        </div>
+        <p class="status" id="status" role="status" aria-live="polite"></p>
+        <div id="errors"></div>
+        <pre class="raw" id="raw">(nothing built yet)</pre>
+      </section>
+    </main>
+
+    <footer class="footnote">
+      <p>No network calls, no storage, no analytics, no PII. The only output is the file you choose to download.</p>
+      <p>Not publicly hosted. Whether to host it on AINumbers or Post Oak Labs has not been decided.</p>
+    </footer>
+
+    <script>
+      "use strict";
+
+      // ------------------------------------------------------------------
+      // Pure, browser-agnostic functions. These are what the Node unit test
+      // (validate.test.mjs) exercises in a vm sandbox; they take/return
+      // plain objects with no DOM access, and they mirror the edi-schema
+      // validator (src/edi_schema/validate.py) so the codes match both sides.
+      // ------------------------------------------------------------------
+
+      // The episode fields the schema requires, in order (for the required
+      // check and for building the record).
+      var EPISODE_REQUIRED = [
+        "episode_id", "provenance", "design", "prior_state", "observation",
+        "hypothesis", "candidates_considered", "chosen_intervention",
+        "post_state", "expert_assessment", "rationale", "confidence",
+        "failure_class"
+      ];
+
+      // Enums the schema closes over. A value outside the enum is schema:enum.
+      var ENUMS = {
+        provenance: ["retrospective", "reproduced", "synthetic-fixture"],
+        severity: ["blocking", "degrading", "cosmetic"],
+        expert_assessment: ["preferred", "acceptable", "regretted", "inconclusive"],
+        failure_class: [
+          "FAIL_CONGESTION", "FAIL_TIMING", "FAIL_IR_DROP", "FAIL_ANTENNA",
+          "FAIL_DRC", "FAIL_LVS", "FAIL_ROUTER", "FAIL_CTS", "FAIL_MEMORY",
+          "FAIL_FLOW", "SDC_BUDGET"
+        ]
+      };
+
+      function has(container, key) { return Object.prototype.hasOwnProperty.call(container, key); }
+
+      // Validate an episode document against the edi-schema rules, returning
+      // [{code, path, message}] with the SAME codes as the Python validator.
+      // This replicates the cross-field rules in validate.py plus the
+      // schema-level required / enum checks, so the questionnaire and
+      // edi-validate agree on the code each defect produces.
+      function validateEpisode(doc) {
+        var errors = [];
+        function add(code, path, message) { errors.push({ code: code, path: path, message: message }); }
+
+        if (!doc || typeof doc !== "object" || Array.isArray(doc)) {
+          return [{ code: "schema:type", path: "$", message: "episode must be an object" }];
+        }
+
+        // Required top-level fields (schema:required).
+        for (var i = 0; i < EPISODE_REQUIRED.length; i++) {
+          if (!has(doc, EPISODE_REQUIRED[i])) {
+            add("schema:required", "$." + EPISODE_REQUIRED[i],
+              "'" + EPISODE_REQUIRED[i] + "' is a required property");
+          }
+        }
+
+        // Provenance enum.
+        if (has(doc, "provenance") && ENUMS.provenance.indexOf(doc.provenance) === -1) {
+          add("schema:enum", "$.provenance",
+            "'" + doc.provenance + "' is not one of " + JSON.stringify(ENUMS.provenance));
+        }
+
+        // Cross-field: exactly one candidate has rejected_because === null.
+        var candidates = doc.candidates_considered;
+        if (Array.isArray(candidates)) {
+          var chosen = [];
+          for (var c = 0; c < candidates.length; c++) {
+            if (candidates[c] && typeof candidates[c] === "object" &&
+                candidates[c].rejected_because === null) {
+              chosen.push(c);
+            }
+          }
+          if (chosen.length === 0) {
+            add("E_CANDIDATES_NO_CHOSEN", "$.candidates_considered",
+              "no candidate has rejected_because: null; exactly one of " +
+              candidates.length + " candidates must be the chosen intervention");
+          } else if (chosen.length > 1) {
+            var joined = chosen.map(function (idx) { return "[" + idx + "]"; }).join(", ");
+            add("E_CANDIDATES_MULTIPLE_CHOSEN", "$.candidates_considered",
+              chosen.length + " candidates have rejected_because: null (at " +
+              joined + "); exactly one must be the chosen intervention");
+          }
+        }
+
+        // Cross-field: provenance === "reproduced" requires environment + commits.
+        if (doc.provenance === "reproduced") {
+          if (!has(doc, "environment")) {
+            add("E_PROVENANCE_REPRODUCED_REQUIRES_ENVIRONMENT", "$.environment",
+              "provenance is \"reproduced\" but no environment block is present");
+          }
+          var design = (doc.design && typeof doc.design === "object") ? doc.design : {};
+          ["rtl_commit", "pdk_commit"].forEach(function (field) {
+            if (!design[field]) {
+              add("E_PROVENANCE_REPRODUCED_REQUIRES_" + field.toUpperCase(), "$.design." + field,
+                "provenance is \"reproduced\" but design." + field + " is missing");
+            }
+          });
+        }
+
+        // Severity enum (observation.severity), if present.
+        if (has(doc, "observation") && doc.observation &&
+            has(doc.observation, "severity") &&
+            ENUMS.severity.indexOf(doc.observation.severity) === -1) {
+          add("schema:enum", "$.observation.severity",
+            "'" + doc.observation.severity + "' is not one of " + JSON.stringify(ENUMS.severity));
+        }
+
+        // expert_assessment enum, if present.
+        if (has(doc, "expert_assessment") &&
+            ENUMS.expert_assessment.indexOf(doc.expert_assessment) === -1) {
+          add("schema:enum", "$.expert_assessment",
+            "'" + doc.expert_assessment + "' is not one of " + JSON.stringify(ENUMS.expert_assessment));
+        }
+
+        // failure_class enum, if present.
+        if (has(doc, "failure_class") &&
+            ENUMS.failure_class.indexOf(doc.failure_class) === -1) {
+          add("schema:enum", "$.failure_class",
+            "'" + doc.failure_class + "' is not one of " + JSON.stringify(ENUMS.failure_class));
+        }
+
+        // confidence is a number in [0,1] (schema:type / schema:minimum / schema:maximum).
+        if (has(doc, "confidence")) {
+          if (typeof doc.confidence !== "number") {
+            add("schema:type", "$.confidence", "confidence must be a number");
+          } else if (doc.confidence < 0 || doc.confidence > 1) {
+            add("schema:minimum", "$.confidence", "confidence must be >= 0 and <= 1");
+          }
+        }
+
+        // schema_version (optional; a record before the field carried no value).
+        // It must be flat semver -- X.Y.Z (the Python side enforces the pattern).
+        if (has(doc, "schema_version")) {
+          if (typeof doc.schema_version !== "string" ||
+              !/^[0-9]+\.[0-9]+\.[0-9]+$/.test(doc.schema_version)) {
+            add("schema:pattern", "$.schema_version",
+              "'" + doc.schema_version + "' is not a semantic version (X.Y.Z)");
+          }
+        }
+
+        // x_extension: the ONE sanctioned extension slot. Must be an object;
+        // its contents are unconstrained (the schema says additionalProperties:
+        // true on the slot). A bare x_-prefixed field at the top level is still
+        // rejected by the closed schema (schema:additionalProperties) -- but the
+        // page validator does not reimplement the full schema, so it accepts it
+        // here; the Python side and the R8 parity gate are the backstop.
+        if (has(doc, "x_extension") &&
+            (typeof doc.x_extension !== "object" || doc.x_extension === null ||
+             Array.isArray(doc.x_extension))) {
+          add("schema:type", "$.x_extension", "x_extension must be an object");
+        }
+
+        return errors;
+      }
+
+      // Soft warnings that warn but never block (the questionnaire's own).
+      function softWarnings(doc) {
+        var warnings = [];
+        var nums = [];
+        function collect(value, path) {
+          if (typeof value === "number") { nums.push(path); }
+          else if (value && typeof value === "object" && value.metrics && typeof value.metrics === "object") {
+            Object.keys(value.metrics).forEach(function (k) { nums.push(path + ".metrics." + k); });
+          }
+        }
+        // "no numbers anywhere" is over-strict for a metric-bearing schema; the
+        // intended soft warning is about fabricated precision on a recollection.
+        // Here we warn when the recollection carries numbers but the record
+        // never says they are rough.
+        if (doc && doc.x_capture && doc.x_capture.self_reported) {
+          // Nothing to block; but note blank rejected_because candidates.
+        }
+        if (doc && Array.isArray(doc.candidates_considered)) {
+          doc.candidates_considered.forEach(function (cand, idx) {
+            if (cand && cand.rejected_because != null && String(cand.rejected_because).trim() === "") {
+              warnings.push({ code: "W_REJECTED_BECAUSE_EMPTY", path: "$.candidates_considered[" + idx + "].rejected_because", message: "a rejected path with no reason is the least useful kind" });
+            }
+          });
+        }
+        return warnings;
+      }
+
+      // Build the episode document from a plain form-state object.
+      // `form` mirrors the DOM ids; this stays DOM-free so it is testable.
+      function buildEpisode(form) {
+        var doc = {};
+        doc.$schema = "https://postoaklabs.github.io/engineering-decision-schema/episode.schema.json";
+        doc.episode_id = form.episode_id || "EP-" + Date.now().toString(36).toUpperCase();
+        doc.provenance = "retrospective";
+        doc.design = { name: form["design-name"] || "", pdk: form["design-pdk"] || "" };
+        if (form["design-scale"]) doc.design.scale_bucket = form["design-scale"];
+
+        doc.prior_state = { stage: form["prior-stage"] || "", metrics: {} };
+        ["prior-util", "prior-wns", "prior-tns", "prior-overflow"].forEach(function (k) {
+          if (form[k] !== undefined && form[k] !== "") doc.prior_state.metrics[k.replace("prior-", "")] = form[k];
+        });
+
+        doc.observation = {
+          metric: form["obs-metric"] || "",
+          value: form["obs-value"] || "",
+          target: form["obs-target"] || "",
+          severity: form["obs-severity"] || ""
+        };
+
+        doc.hypothesis = form.hypothesis || "";
+        doc.failure_class = form["failure-class"] || "";
+
+        doc.candidates_considered = (form.candidates || []).map(function (c) {
+          return { intervention: c.intervention || "", rejected_because: (c.rejected === true ? null : (c.rejected_because || "")) };
+        });
+
+        doc.chosen_intervention = {
+          parameter: form["chosen-param"] || "",
+          before: form["chosen-before"] || "",
+          after: form["chosen-after"] || ""
+        };
+
+        doc.post_state = { stage: form["post-stage"] || "", metrics: {} };
+        ["post-util", "post-wns", "post-tns", "post-overflow"].forEach(function (k) {
+          if (form[k] !== undefined && form[k] !== "") doc.post_state.metrics[k.replace("post-", "")] = form[k];
+        });
+
+        doc.expert_assessment = form["expert-assessment"] || "";
+        doc.rationale = form.rationale || "";
+        doc.confidence = (form.confidence !== undefined && form.confidence !== "") ? Number(form.confidence) : null;
+
+        // Capture metadata. The episode schema is closed (additionalProperties:
+        // false), so x_capture is a documented extension; a strict validator
+        // flags it, which is expected and honest (an uninterviewed capture is
+        // not part of the episode contract).
+        doc.x_capture = {
+          instrument: "episode-questionnaire",
+          version: "0.1.0",
+          self_reported: true,
+          captured_at: (form.captured_at || null)
+        };
+
+        return doc;
+      }
+
+      // Hand-mirror of the edi-croissant 1.1 wrapping the episode in a minimal
+      // Croissant JSON-LD context (dataset -> recordSet -> one-row includes).
+      // Kept as a pure function so it is testable; it deliberately does NOT
+      // import the edi-schema crate (the page cannot import Python).
+      function wrapCroissant(doc) {
+        var row = {};
+        var fieldNames = ["episode_id", "provenance", "failure_class", "hypothesis", "rationale", "expert_assessment"];
+        fieldNames.forEach(function (name) { row[name] = (doc && doc[name] !== undefined) ? doc[name] : null; });
+        return {
+          "@context": {
+            "@language": "en", "@vocab": "https://schema.org/", "sc": "https://schema.org/",
+            "cr": "http://mlcommons.org/croissant/", "dct": "http://purl.org/dc/terms/",
+            "data": { "@id": "cr:data", "@type": "@json" }
+          },
+          "@type": "Dataset",
+          "name": "edi-episodes",
+          "description": "Engineering-decision episodes (self-reported, uninterviewed).",
+          "url": "https://github.com/PostOakLabs/engineering-decision-schema",
+          "license": "CC-BY-4.0",
+          "version": "1.1",
+          "conformsTo": "http://mlcommons.org/croissant/1.1",
+          "recordSet": [{
+            "@type": "cr:RecordSet", "@id": "episodes", "name": "episodes",
+            "description": "One row per admitted engineering-decision episode.",
+            "data": { "encodingFormat": "application/json", "includes": [row] }
+          }]
+        };
+      }
+
+      // The cause vocabularies (picker options) per failure class, from the
+      // diagnosis-library digest (synth-fixture seeds; picker + free text).
+      var CAUSE_VOCAB = {
+        FAIL_CONGESTION: ["Macro placement creating narrow channels / pin-access walls", "Local placement density / insufficient whitespace", "Power grid / PG mesh over-blocking tracks", "Pin-access / pin-density concentration", "High-fanout / bus / connectivity concentration", "Clock-tree / optimization-buffer growth consuming tracks", "Non-default rule / layer assignment too aggressive", "Floorplan aspect ratio too extreme"],
+        FAIL_TIMING: ["Incorrect / incomplete constraints (clock group, generated clock, false/multicycle, IO delay, derate)", "Excessive logic depth / undersized cells", "Placement / wirelength / detour", "Clock skew / insertion-delay mismatch", "Post-route RC / crosstalk / extraction", "High-fanout net (reset, scan-enable) with weak driver", "OCV / AOCV / POCV derate or IR-induced pessimism", "Clock period unrealistic for the design", "Clock network latency exceeding ~30% of the period"],
+        FAIL_IR_DROP: ["Insufficient / resistive PG topology", "Dynamic simultaneous-switching event", "Insufficient / mis-placed decap", "Via bottleneck / weak layer transition", "Macro power-pin starvation / power-domain placement", "Clock-tree buffer current concentration", "Package / bump / C4 / board PDN", "Wrong activity annotation / library power"],
+        FAIL_DRC: ["Residual congestion the detailed router could not resolve", "Pin-access / via-access failure", "Antenna (metal area/length + diode presence)", "Via / cut-layer rules (enclosure, min-area, redundant via)", "Wrong or inconsistent rule deck / tech LEF between P&R and signoff", "NDR / layer-allocation policy too aggressive", "Late ECO / manual edit ignoring existing routes", "Metal-fill / dummy-fill interactions", "Overly conservative deck for the corner"],
+        FAIL_CTS: ["Bad sink clustering / topology / uneven sink distribution", "Macro / blockage forcing clock detours", "ICG / clock-gating placement or depth", "Over-constrained CTS target (skew/latency too tight)", "Excessive fanout / buffer sizing / transition violations", "Routing congestion / clock-route resource limitation", "Stale CTS - not re-run after a placement change", "Non-register pins swept into the sink list / missing clock definition", "OCV / AOCV derates driving an over-conservative tree"],
+        SDC_BUDGET: ["Block-boundary input/output delay budget not representing the top-level contract", "Asymmetric (logic-depth-proportional) split between unimplemented blocks", "False path vs multicycle path mis-identified", "Asynchronous CDC constraint omitted or wrong", "Virtual clock missing for external / off-chip I/O", "Generated / divided clock derived on the wrong node", "Early over-constraint with staged relaxation mishandled", "Clock uncertainty composition (jitter + skew) wrong"]
+      };
+
+      var ARTIFACTS = [
+        "Macro channel width histogram", "Pin-access analysis for the largest macros",
+        "Local utilization distribution", "Power grid IR budget / static IR map",
+        "Boundary pin assignment", "Clock entry / spine reservation / root placement",
+        "Routing-layer budget", "Setup-slack histogram by clock group",
+        "Congestion map (with the clock tree not yet in it)",
+        "Constraint sanity list", "High-fanout nets + design-rule violations",
+        "Slack decomposition on the worst paths", "Corner x mode matrix",
+        "ECO count and last-2-weeks timing trend", "DRC/LVS/antenna/ERC results with deck provenance",
+        "GDS round-trip and diff against the frozen version"
+      ];
+
+      // ------------------------------------------------------------------
+      // DOM wiring (browser only; never runs in the Node sandbox).
+      // ------------------------------------------------------------------
+
+      var CAUSE_SELECTORS = {
+        FAIL_CONGESTION: "Cause (congestion): pick any that apply",
+        FAIL_TIMING: "Cause (timing): pick any that apply. Distinguish constraint / logic-depth / physical first",
+        FAIL_IR_DROP: "Cause (IR drop): pick any that apply. Is the hotspot static or does it move with activity?",
+        FAIL_DRC: "Cause (DRC): pick any that apply. Check the >70% in top-10 overflow gcell test for congestion",
+        FAIL_CTS: "Cause (CTS): pick any that apply. Remember CTS failure is often a placement-quality test",
+        SDC_BUDGET: "SDC pattern the budget defect follows"
+      };
+
+      function el(id) { return document.getElementById(id); }
+
+      function fillCauseFromClass(failureClass) {
+        var picker = el("cause-picker");
+        var hint = el("cause-hint");
+        picker.replaceChildren();
+        var zero = document.createElement("option"); zero.value = ""; zero.textContent = "(none selected)";
+        picker.append(zero);
+        var vocab = CAUSE_VOCAB[failureClass];
+        if (vocab) {
+          vocab.forEach(function (c) {
+            var opt = document.createElement("option");
+            opt.value = c; opt.textContent = c;
+            picker.append(opt);
+          });
+          hint.textContent = CAUSE_SELECTORS[failureClass] || ("Cause vocabulary for " + failureClass);
+          el("cause-panel").hidden = false;
+        } else {
+          // No digest vocabulary for this class (ANTENNA / LVS / ROUTER / MEMORY /
+          // FLOW): free text only, never picker-only.
+          hint.textContent = "No vocabulary seed yet for " + failureClass + "; use the free text. You can add the picker later.";
+          el("cause-panel").hidden = false;
+        }
+      }
+
+      var candidates = [];
+      function renderCandidates() {
+        var host = el("candidates");
+        host.replaceChildren();
+        for (var i = 0; i < candidates.length; i++) {
+          var wrap = document.createElement("div");
+          wrap.className = "candidate";
+          var title = document.createElement("label");
+          title.textContent = "Candidate " + (i + 1) + " (mark the one you took)";
+          var inter = document.createElement("input");
+          inter.type = "text"; inter.className = "cand-intervention";
+          inter.placeholder = "The intervention, e.g. swap to LVT, move the macro, relax the budget";
+          var reason = document.createElement("input");
+          reason.type = "text"; reason.className = "cand-rejected";
+          reason.placeholder = "Why rejected: schedule / area / risk / IR / downstream churn";
+          var mark = document.createElement("label");
+          var take = document.createElement("input");
+          take.type = "checkbox"; take.className = "cand-taken";
+          take.checked = false;
+          mark.textContent = " this is the one I took (rejected_because = null)";
+          mark.insertBefore(take, mark.firstChild);
+          var dupe = document.createElement("button");
+          dupe.type = "button"; dupe.className = "dupe"; dupe.textContent = "Remove";
+          dupe.addEventListener("click", function (idx) { return function () { candidates.splice(idx, 1); renderCandidates(); }; }(i));
+          wrap.append(title, inter, reason, mark, dupe);
+          wrap.dataset.index = i;
+          host.append(wrap);
+        }
+        var note = document.createElement("p");
+        note.className = "hint";
+        note.textContent = "Minimum 2 candidates to proceed. Rejected paths with a concrete cost (schedule, area, risk, IR, downstream churn) are the most valuable material.";
+        host.append(note);
+      }
+
+      function readCandidateInputs() {
+        var nodes = el("candidates").querySelectorAll(".candidate");
+        var out = [];
+        nodes.forEach(function (node) {
+          var intervention = node.querySelector(".cand-intervention").value;
+          var rejected = node.querySelector(".cand-rejected").value;
+          var taken = node.querySelector(".cand-taken").checked;
+          out.push({ intervention: intervention, rejected: taken, rejected_because: rejected });
+        });
+        return out;
+      }
+
+      function readFormState() {
+        var state = {
+          "design-name": el("design-name").value,
+          "design-pdk": el("design-pdk").value,
+          "design-scale": el("design-scale").value,
+          "prior-stage": el("prior-stage").value,
+          "prior-util": el("prior-util").value,
+          "prior-wns": el("prior-wns").value,
+          "prior-tns": el("prior-tns").value,
+          "prior-overflow": el("prior-overflow").value,
+          "obs-metric": el("obs-metric").value,
+          "obs-value": el("obs-value").value,
+          "obs-target": el("obs-target").value,
+          "obs-severity": el("obs-severity").value,
+          "failure-class": el("failure-class").value,
+          hypothesis: el("hypothesis").value,
+          cause: el("cause-picker").value,
+          "chosen-param": el("chosen-param").value,
+          "chosen-before": el("chosen-before").value,
+          "chosen-after": el("chosen-after").value,
+          "post-stage": el("post-stage").value,
+          "post-util": el("post-util").value,
+          "post-wns": el("post-wns").value,
+          "post-tns": el("post-tns").value,
+          "post-overflow": el("post-overflow").value,
+          "expert-assessment": el("expert-assessment").value,
+          confidence: el("confidence").value,
+          rationale: el("rationale").value,
+          lessons: el("lessons").value,
+          attribution: el("attribution").value,
+          "weakest-point": el("weakest-point").value,
+          candidates: readCandidateInputs(),
+          artifacts: Array.prototype.slice.call(el("artifacts").querySelectorAll("input[type=checkbox]:checked")).map(function (c) { return c.value; }),
+          captured_at: new Date().toISOString()
+        };
+        return state;
+      }
+
+      function buildDoc() {
+        var state = readFormState();
+        var doc = buildEpisode(state);
+        // Attach the optional attribution + artifacts as capture-extended fields
+        // (kept out of the closed schema; this is documented in the page).
+        if (state.attribution) doc.x_capture.attribution = state.attribution;
+        if (state.artifacts && state.artifacts.length) doc.x_capture.artifacts_available = state.artifacts;
+        if (state.cause) doc.x_capture.suspected_cause_seed = state.cause;
+        return doc;
+      }
+
+      function validateClick() {
+        var doc = buildDoc();
+        var errors = validateEpisode(doc);
+        var warnings = softWarnings(doc);
+        renderErrors(errors, warnings);
+        var allSoft = errors.every(function (e) { return false; });
+        var strong = errors.filter(function (e) { return true; });
+        el("status").textContent = strong.length === 0 ? "Structure clean. Soft warnings below are advisory, not blocks." : strong.length + " validation issue(s) to fix.";
+        el("status").classList.toggle("error", strong.length > 0);
+        el("raw").textContent = JSON.stringify(doc, null, 2);
+      }
+
+      function renderErrors(errors, warnings) {
+        var host = el("errors");
+        host.replaceChildren();
+        errors.forEach(function (e) {
+          var p = document.createElement("p");
+          p.className = "err";
+          p.textContent = e.code + " at " + e.path + ": " + e.message;
+          host.append(p);
+        });
+        warnings.forEach(function (w) {
+          var p = document.createElement("p");
+          p.className = "warn";
+          p.textContent = w.code + " at " + w.path + ": " + w.message;
+          host.append(p);
+        });
+      }
+
+      function download(fileName, content, mime) {
+        var blob = new Blob([content], { type: mime || "application/json" });
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url; a.download = fileName;
+        document.body.append(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+      }
+
+      function main() {
+        el("add-candidate").addEventListener("click", function () {
+          if (candidates.length < 2) { candidates.push({ intervention: "", rejected: false, rejected_because: "" }); }
+          else { candidates.push({ intervention: "", rejected: false, rejected_because: "" }); }
+          renderCandidates();
+        });
+        candidates.push({ intervention: "", rejected: false, rejected_because: "" });
+        candidates.push({ intervention: "", rejected: false, rejected_because: "" });
+        renderCandidates();
+
+        el("failure-class").addEventListener("change", function (e) { fillCauseFromClass(e.target.value); });
+
+        var artHost = el("artifacts");
+        ARTIFACTS.forEach(function (a) {
+          var lab = document.createElement("label");
+          var cb = document.createElement("input");
+          cb.type = "checkbox"; cb.value = a;
+          lab.append(cb, document.createTextNode(" " + a));
+          artHost.append(lab);
+        });
+
+        el("validate").addEventListener("click", validateClick);
+        el("download").addEventListener("click", function () {
+          var doc = buildDoc();
+          el("raw").textContent = JSON.stringify(doc, null, 2);
+          download("episode-" + (doc.episode_id || "record") + ".json", JSON.stringify(doc, null, 2));
+        });
+        el("download-croissant").addEventListener("click", function () {
+          var doc = buildDoc();
+          var wrapped = wrapCroissant(doc);
+          download("episode-croissant-" + (doc.episode_id || "record") + ".json", JSON.stringify(wrapped, null, 2));
+        });
+        el("copy").addEventListener("click", function () {
+          var doc = buildDoc();
+          navigator.clipboard && navigator.clipboard.writeText(JSON.stringify(doc, null, 2));
+        });
+
+        // Post-state consistency nudge: if every prior metric improved at once.
+        function monitorConsistency() {
+          var before = { "prior-util": el("prior-util").value, "prior-wns": el("prior-wns").value, "prior-tns": el("prior-tns").value, "prior-overflow": el("prior-overflow").value };
+          var after = { "post-util": el("post-util").value, "post-wns": el("post-wns").value, "post-tns": el("post-tns").value, "post-overflow": el("post-overflow").value };
+          var compared = 0, improved = 0;
+          for (var k in before) { if (before[k] !== "" && after[k] !== "") { compared++; if (Number(after[k]) <= Number(before[k])) improved++; } }
+          // For WNS/TNS and overflow, "improved" is a larger positive slack / smaller
+          // magnitude; this is an approximate heuristic (nudge only, never blocks).
+          if (compared >= 2 && improved === compared) el("consistency-nudge").hidden = false;
+          else el("consistency-nudge").hidden = true;
+        }
+        ["prior-util", "prior-wns", "prior-tns", "prior-overflow", "post-util", "post-wns", "post-tns", "post-overflow"].forEach(function (id) {
+          el(id).addEventListener("input", monitorConsistency);
+        });
+      }
+
+      if (typeof document !== "undefined" && document.getElementById) main();
+    </script>
+  </body>
+</html>

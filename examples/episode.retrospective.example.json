@@ -1,0 +1,49 @@
+{
+  "$schema": "https://postoaklabs.github.io/engineering-decision-schema/episode.schema.json",
+  "episode_id": "EXAMPLE-EP-RETROSPECTIVE-001",
+  "provenance": "retrospective",
+  "design": {
+    "name": "TODO(expert): design name",
+    "pdk": "TODO(expert): process node"
+  },
+  "prior_state": {
+    "stage": "TODO(expert): flow stage before the intervention",
+    "metrics": {
+      "wns_ns": "TODO(expert): recalled value before",
+      "utilization": "TODO(expert): recalled value before"
+    }
+  },
+  "observation": {
+    "metric": "TODO(expert): metric name with unit suffix, e.g. wns_ns",
+    "value": "TODO(expert): observed value",
+    "target": "TODO(expert): value the design was aiming for",
+    "severity": "degrading"
+  },
+  "hypothesis": "TODO(expert): your causal reading of the observation",
+  "candidates_considered": [
+    {
+      "intervention": "TODO(expert): a candidate that was considered and rejected",
+      "rejected_because": "TODO(expert): why it was rejected"
+    },
+    {
+      "intervention": "TODO(expert): the candidate that was taken",
+      "rejected_because": null
+    }
+  ],
+  "chosen_intervention": {
+    "parameter": "TODO(expert): parameter or knob that was changed",
+    "before": "TODO(expert): value before",
+    "after": "TODO(expert): value after"
+  },
+  "post_state": {
+    "stage": "TODO(expert): flow stage after the intervention",
+    "metrics": {
+      "wns_ns": "TODO(expert): recalled value after",
+      "utilization": "TODO(expert): recalled value after"
+    }
+  },
+  "expert_assessment": "inconclusive",
+  "rationale": "TODO(expert): why this intervention was taken over the others",
+  "confidence": 0.0,
+  "failure_class": "FAIL_TIMING"
+}

@@ -1,0 +1,24 @@
+NOTICE for edi-schema
+Copyright 2026 Post Oak Labs
+
+This repository holds three JSON Schemas, a Python validation library, and a
+CLI/export tool (the code), plus example episode documents and a questionnaire
+capture instrument. Licensing:
+
+- The **code** (src/, schemas/, web/, tools/, tests/, build and CI files) is
+  licensed under Apache-2.0. See LICENSE.
+
+- The **data corpus** (episode documents the code validates and exports; e.g.
+  episodes/, example episode documents, and any exported dataset) is licensed
+  under CC BY 4.0, per the licensing decision of 2026-09-02. The code license
+  (Apache-2.0) and the data license (CC BY 4.0) are distinct: a dataset this
+  repository emits to publish is CC BY 4.0 even though the emitting code is
+  Apache-2.0.
+
+Third-party attribution
+-----------------------
+The Python runtime dependency is jsonschema (MIT-style). No third-party
+component is vendored or modified into this repository; every dependency is
+resolved by the build system and is licensed under its own terms. Upstream
+NOTICE files, where present, are reproduced by the dependency's own
+distribution and are not copied here.

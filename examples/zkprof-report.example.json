@@ -1,0 +1,37 @@
+{
+  "$schema": "https://postoaklabs.github.io/engineering-decision-schema/zkprof-report.schema.json",
+  "report_version": "0.1.0",
+  "target": {
+    "kind": "native",
+    "os": "FIXTURE-not-a-real-platform",
+    "cpu": "FIXTURE-not-a-real-platform"
+  },
+  "system": {
+    "proof_system": "groth16",
+    "curve_or_field": "bn254",
+    "constraint_count": 16384
+  },
+  "workload_id": "fixture-not-a-measurement",
+  "total_ms": 100.0,
+  "phases": [
+    { "name": "setup", "ms": 10.0, "share": 0.1 },
+    { "name": "witness_gen", "ms": 20.0, "share": 0.2 },
+    { "name": "prove", "ms": 70.0, "share": 0.7 }
+  ],
+  "primitives": [
+    { "name": "msm", "ms": 45.0, "share": 0.45 },
+    { "name": "ntt_fft", "ms": 25.0, "share": 0.25 },
+    { "name": "hash", "ms": 10.0, "share": 0.1 },
+    { "name": "field_arith", "ms": 10.0, "share": 0.1 },
+    { "name": "marshalling", "ms": 5.0, "share": 0.05 },
+    { "name": "witness_gen", "ms": 5.0, "share": 0.05 }
+  ],
+  "memory": {},
+  "threads": {
+    "count": 1,
+    "shared_array_buffer": false
+  },
+  "crossOriginIsolated": false,
+  "timer_resolution_us": 100.0,
+  "iterations": 1
+}

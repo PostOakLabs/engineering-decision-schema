@@ -1,0 +1,72 @@
+{
+  "$schema": "https://postoaklabs.github.io/engineering-decision-schema/episode.schema.json",
+  "episode_id": "EP-GOLD-TRID-001",
+  "provenance": "reproduced",
+  "design": {
+    "name": "trid-10pct-tolerance-cure-recompute (12 CFR 1026.19(e)(3)(ii) mixed-direction bucket)",
+    "rtl_commit": "sha256:e7f30c44119e934eafe839426b27833efcd989d0a4dd516a5c6f21b2eb536488 (ASIC/digest/day2-c1-adjudication.md, the adjudicated source record whose fee table this episode recomputes)",
+    "pdk": "12-CFR-1026 (Regulation Z, TRID fee tolerances)",
+    "pdk_commit": "eCFR 12 CFR 1026.19(e)(3)(ii), as retrieved for the Day-2 adjudication (2026-09-01)"
+  },
+  "environment": {
+    "librelane_version": "n/a-non-silicon-episode",
+    "openroad_version": "n/a-non-silicon-episode",
+    "yosys_version": "n/a-non-silicon-episode",
+    "container": "recompute environment: plain decimal arithmetic, re-executed 2026-09-01 from the fee table stated in prior_state; no silicon toolchain involved (see episodes/gold/README.md mapping convention)"
+  },
+  "prior_state": {
+    "stage": "tolerance_test_method_selection",
+    "metrics": {
+      "fee_recording_le_usd": 100,
+      "fee_recording_cd_usd": 200,
+      "fee_settlement_le_usd": 500,
+      "fee_settlement_cd_usd": 400,
+      "fee_survey_le_usd": 150,
+      "fee_survey_cd_usd": 120,
+      "sum_le_usd": 750,
+      "sum_cd_usd": 720,
+      "threshold_10pct_usd": 75,
+      "allowed_aggregate_usd": 825
+    }
+  },
+  "observation": {
+    "metric": "candidate_method_divergence_usd",
+    "value": 25,
+    "target": 0,
+    "severity": "blocking"
+  },
+  "hypothesis": "The two candidate implementations of the 10% tolerance test disagree on this mixed-direction fee table because sum-of-increases ignores offsetting decreases: it sums only the Recording increase (+100) against the $75 threshold and reports a $25 violation, while the aggregate reads the whole bucket, which DECREASED by $30. The regulation's test is aggregate-to-aggregate: the sum of charges at consummation against the sum disclosed, plus ten percent.",
+  "candidates_considered": [
+    {
+      "intervention": "Implement the 10% test as sum-of-line-item-increases vs threshold (sum every fee that went up, ignore every fee that went down, compare that sum to 10% of the LE aggregate).",
+      "rejected_because": "Concrete failure on the stated table: increases sum to $100 against a $75 threshold, reporting a $25 violation and a $25 cure owed, on a bucket whose aggregate DECREASED $30 and violates nothing. The Day-2 adjudication recomputed 31 mixed-direction cases where the two methods diverge (one case: +400/-400 fees, sum-of-increases 400 vs aggregate 0). Cost: false violations, unowed cures paid out, and a misstated Closing Disclosure on every mixed-direction loan."
+    },
+    {
+      "intervention": "Apply the zero-tolerance per-fee treatment (12 CFR 1026.19(e)(3)(i)) to every fee in the bucket: any individual increase is an overage regardless of the aggregate.",
+      "rejected_because": "Category error with a measurable cost: (e)(3)(i) governs lender charges and transfer taxes; the services in this bucket sit in (e)(3)(ii), whose tolerance is defined on the AGGREGATE. Applied here it flags Recording's +$100 in full, a $100 overage where the correct answer is $0 — strictly worse than the sum-of-increases error and unsupported by the bucket's own clause."
+    },
+    {
+      "intervention": "Implement the aggregate test: violation iff sum(CD bucket fees) > sum(LE bucket fees) x 1.10; cure = the excess.",
+      "rejected_because": null
+    }
+  ],
+  "chosen_intervention": {
+    "parameter": "tolerance_test_method",
+    "before": "sum_of_line_item_increases_vs_threshold",
+    "after": "aggregate_cd_vs_aggregate_le_x1.10"
+  },
+  "post_state": {
+    "stage": "tolerance_test_method_selection",
+    "metrics": {
+      "aggregate_delta_usd": -30,
+      "violation_usd": 0,
+      "cure_owed_usd": 0,
+      "rejected_method_false_violation_usd": 25,
+      "recompute_check": "sum_cd 720 <= allowed 825 -> no violation; verified against the Day-2 adjudication's own recomputation of the same table"
+    }
+  },
+  "expert_assessment": "preferred",
+  "rationale": "The aggregate reading follows the clause text (the tolerance attaches to the sum of the (e)(3)(ii) charges, not to each charge), reproduces the adjudicated ground truth on this table (no violation; the source record's SELF-INCONSISTENT entry failed by swapping fee tables, not by method), and is the treatment all 13 adjudicated models applied on 31 mixed-direction cases. Sum-of-increases is the classic implementation defect this fee table was constructed to expose: every number needed to see the divergence ($25 vs $0) is in prior_state and recomputable in four lines of arithmetic.",
+  "confidence": 0.97,
+  "failure_class": "FAIL_FLOW"
+}

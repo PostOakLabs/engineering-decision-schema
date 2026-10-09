@@ -1,0 +1,65 @@
+{
+  "$schema": "https://postoaklabs.github.io/engineering-decision-schema/episode.schema.json",
+  "episode_id": "EP-GOLD-REGZ-ART220-001",
+  "provenance": "retrospective",
+  "design": {
+    "name": "art-220-reg-z-threshold-lookup kernel, 2025 threshold row (shared SSOT consumed by art-218 and art-234 copies)",
+    "pdk": "12-CFR-1026 (Regulation Z annual threshold adjustments, CFPB)"
+  },
+  "prior_state": {
+    "stage": "live_wrong_table_diagnosis",
+    "metrics": {
+      "kernel_2025_tier1_min_usd": 134500,
+      "kernel_2025_tier2_fixed_usd": 4035,
+      "kernel_2025_tier3_min_usd": 26900,
+      "kernel_2025_hoepa_floor_usd": 1345,
+      "consistent_copies_in_estate": 3,
+      "dup_table_convergence_gate": "green across all three copies",
+      "cited_fr_doc": "FR 2024-28929 (resolves to an NRC uranium-facility environmental assessment, not a CFPB adjustment)"
+    }
+  },
+  "observation": {
+    "metric": "kernel_vs_official_2025_tier1_min_usd",
+    "value": 134500,
+    "target": 134841,
+    "severity": "blocking"
+  },
+  "hypothesis": "The 2025 row was inflation-ESTIMATED at authoring time rather than retrieved from the official CFPB adjustment, and the estimate then propagated to the art-218 and art-234 copies — so three kernels agree with each other and disagree with the Federal Register on every tier. The wrong FR citation (a real document that is not the operative instrument) is the tell: existence-checking a citation is not identity-checking it.",
+  "candidates_considered": [
+    {
+      "intervention": "Accept the dup-table convergence gate's green result as correctness evidence and close the finding (three independent kernels agree; treat agreement as verification).",
+      "rejected_because": "This was the live rejected hypothesis of the incident, and the record shows exactly why it failed: the three copies share ancestry, so the convergence gate passes consistent-but-wrong values BY DEFINITION — it measures copy fidelity, not correctness. The concrete cost, measured after retrieval: every 2025 tier wrong (off by $341 / $10 / $68 / $3) while the gate stayed green on all three copies. Convergence and correctness-anchoring are different gates."
+    },
+    {
+      "intervention": "Patch only the observed tier_1_min divergence ($134,500 -> $134,841) and reseal.",
+      "rejected_because": "The factor forensic showed the whole row is one estimation event, not one bad cell: tier_2/tier_3/HOEPA-floor diverge the same way, and the FR citations resolve to foreign documents (NRC / HUD / Postal notices). A single-cell patch reseals three wrong tiers and false provenance, and leaves the art-218/art-234 copies untouched. Cost: a second forensic and a second re-prove later, on a table already known bad."
+    },
+    {
+      "intervention": "Retrieval-first correction: fetch the operative CFPB adjustment (FR 2024-27553 for 2025), replace every tier and every FR citation from retrieved values, report blast radius across the art-218/art-234 consumers, re-prove the sealed kernels.",
+      "rejected_because": null
+    }
+  ],
+  "chosen_intervention": {
+    "parameter": "threshold_table_source",
+    "before": "inflation-estimated constants with unverified FR citations",
+    "after": "retrieved official CFPB adjustment values (FR 2024-27553), citations identity-checked against federalregister.gov"
+  },
+  "post_state": {
+    "stage": "retrieval_divergence_confirmed",
+    "metrics": {
+      "official_2025_tier1_min_usd": 134841,
+      "official_2025_tier2_fixed_usd": 4045,
+      "official_2025_tier3_min_usd": 26968,
+      "official_2025_hoepa_floor_usd": 1348,
+      "divergence_tier1_usd": 341,
+      "divergence_tier2_usd": 10,
+      "divergence_tier3_usd": 68,
+      "divergence_hoepa_floor_usd": 3,
+      "fix_disposition": "retrieval-anchored fix rows staged for all three consumer kernels, sequenced for one re-prove each"
+    }
+  },
+  "expert_assessment": "preferred",
+  "rationale": "Retrospective record: the full diagnostic arc — convergence-gate pass, factor forensic, federalregister.gov retrieval divergence, foreign-document citation identification, and the staged fixes — is documented in the AINumbers workspace records research/FR-INDEXATION-CHAIN-2026-09-01.md (sha256 d33e555224c20d14fd8ffca70f3f622a23cd6d5919ae8f8debf11b467a5344e0; its comparison table records kernel 134500 vs official \"$134,841\" as DIVERGES), research/INDEXED-TABLES-SWEEP-2026-09-01.md, and research/CITATION-INSTRUMENT-INTEGRITY-2026-09-01.md. The retrieval-first path was chosen because both alternatives leave known-wrong sealed values live: one by mistaking agreement for truth, one by under-scoping the repair. The episode's transferable content is the rejected first candidate — agreement among copies is not evidence.",
+  "confidence": 0.95,
+  "failure_class": "FAIL_FLOW"
+}

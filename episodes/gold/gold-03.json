@@ -1,0 +1,59 @@
+{
+  "$schema": "https://postoaklabs.github.io/engineering-decision-schema/episode.schema.json",
+  "episode_id": "EP-GOLD-EPSILON-HOEPA-001",
+  "provenance": "synthetic-fixture",
+  "design": {
+    "name": "hoepa-prepayment-penalty-trigger epsilon boundary fixture (modeled on the art-234 L106 inverted-boundary class; constructed vectors, not a run against the live kernel)",
+    "pdk": "12-CFR-1026.32(a)(1)(iii) (HOEPA prepayment-penalty coverage trigger: penalty 'can exceed 2 percent')"
+  },
+  "prior_state": {
+    "stage": "at_boundary_vector_execution",
+    "metrics": {
+      "coded_comparator": "pp_pct > 2.0 - 1e-5",
+      "operative_text": "strict exceed: trigger only when the penalty CAN EXCEED 2 percent",
+      "at_boundary_input_pp_pct": 2.0,
+      "boundary_case_frequency": "exactly-2% caps are a common contractual term, so the boundary input is not exotic"
+    }
+  },
+  "observation": {
+    "metric": "trigger_fires_at_exactly_2_percent",
+    "value": "fires (2.0 > 1.99999 is true)",
+    "target": "must not fire (2.0 does not exceed 2.0)",
+    "severity": "blocking"
+  },
+  "hypothesis": "The float-safety epsilon was applied with the wrong sign for a strict comparator: '> t - eps' widens the trigger to include the boundary, converting strict > into >= at exactly t. An epsilon is part of the comparator, not a neutral safety margin — its sign decides which side of the boundary the test lands on.",
+  "candidates_considered": [
+    {
+      "intervention": "Keep 'pp_pct > 2.0 - 1e-5' on the ground that firing early is the conservative direction (flags more loans as high-cost).",
+      "rejected_because": "Concrete wrong verdict, not conservatism: on the fixture row pp_pct = 2.000 the code fires (2.000 > 1.99999) while the operative text is strict ('can exceed 2 percent'), so every loan whose penalty cap is exactly 2% — a common contractual cap — is misclassified as HOEPA-covered. A misclassification in either direction is a wrong verdict; conservative-direction is not compliance."
+    },
+    {
+      "intervention": "Drop the epsilon entirely: 'pp_pct > 2.0'.",
+      "rejected_because": "Fixes the stated boundary but reopens the float hazard the epsilon existed for: an input meant to be 2.0 that arrives as 2.0000000001 after upstream decimal arithmetic fires the trigger on noise. Cost visible in the fixture table: the no-epsilon form and the chosen form disagree on the 2.0-to-2.005 noise band, and only the chosen form states which side of that band is intended."
+    },
+    {
+      "intervention": "Invert the epsilon to the strict side: 'pp_pct > 2.0 + 0.005', mirroring the same kernel family's points-and-fees trigger form ('> pf_limit + 0.005'), so the trigger fires only clearly above the threshold and the margin's direction is explicit.",
+      "rejected_because": null
+    }
+  ],
+  "chosen_intervention": {
+    "parameter": "pp_trigger_comparator",
+    "before": "pp_pct > 2.0 - 1e-5",
+    "after": "pp_pct > 2.0 + 0.005"
+  },
+  "post_state": {
+    "stage": "at_boundary_vector_execution",
+    "metrics": {
+      "vector_pp_1_995": "old: no-fire | chosen: no-fire (agree)",
+      "vector_pp_2_000": "old: FIRES (wrong, strict text) | chosen: no-fire (correct)",
+      "vector_pp_2_004": "old: fires | chosen: no-fire (inside declared +0.005 noise margin)",
+      "vector_pp_2_005": "old: fires | chosen: no-fire (boundary of the declared margin: 2.005 > 2.005 is false)",
+      "vector_pp_2_006": "old: fires | chosen: FIRES (agree, clearly above threshold)",
+      "recompute_note": "every cell recomputable from the two comparator strings and the input alone; e.g. row 2.000: old 2.000 > 1.99999 = true; chosen 2.000 > 2.005 = false"
+    }
+  },
+  "expert_assessment": "preferred",
+  "rationale": "The at-boundary table is the whole argument: the two epsilon signs produce opposite verdicts at exactly 2.0, and only the strict-side form matches the operative text while still carrying an explicit, named noise margin. The fixture is synthetic by construction — the comparator shape and the strict-vs-epsilon analysis mirror a real audited kernel defect of this class, but the vectors here are constructed for calibration and were not executed against any live kernel; nothing in this episode claims a production measurement.",
+  "confidence": 0.9,
+  "failure_class": "FAIL_FLOW"
+}

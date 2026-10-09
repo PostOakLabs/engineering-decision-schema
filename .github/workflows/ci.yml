@@ -1,0 +1,109 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Pinned so the runner and a dev machine lint with byte-identical rules; keep in
+# lockstep with the ruff pin in pyproject.toml [project.optional-dependencies].
+env:
+  RUFF_VERSION: "0.16.5"
+
+jobs:
+  lint-and-test:
+    name: lint + test (python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      # Belt and braces with the pyproject pin: an unpinned `.[dev]` install can
+      # still resolve a different ruff, so force the exact version and refuse to
+      # lint under anything else.
+      - name: Pin the lint toolchain
+        run: pip install "ruff==${{ env.RUFF_VERSION }}"
+
+      - name: Assert the pinned ruff version
+        run: |
+          got="$(ruff --version | awk '{print $2}')"
+          if [ "$got" != "${RUFF_VERSION}" ]; then
+            echo "::error::expected ruff ${RUFF_VERSION}, runner has ${got}"
+            exit 1
+          fi
+          echo "linting with ruff ${got}"
+
+      - name: Lint
+        run: |
+          ruff check .
+          ruff format --check .
+
+      - name: Test
+        run: pytest
+
+      - name: Validate the committed examples via the installed CLI
+        run: edi-validate examples/*.json
+
+  wheel-ships-schemas:
+    name: wheel bundles the schemas
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build wheel
+        run: |
+          python -m pip install --upgrade pip build
+          python -m build --wheel
+
+      # Consumers install by git tag, so the schema files must travel inside
+      # the wheel. If the force-include mapping regresses, this fails.
+      - name: Assert the wheel contains the schemas
+        run: |
+          python - <<'PY'
+          import glob, sys, zipfile
+          wheels = glob.glob("dist/*.whl")
+          assert len(wheels) == 1, wheels
+          names = zipfile.ZipFile(wheels[0]).namelist()
+          for schema in ("episode", "run-manifest", "zkprof-report"):
+              wanted = f"edi_schema/schemas/{schema}.schema.json"
+              if wanted not in names:
+                  sys.exit(f"wheel is missing {wanted}\nfound: {sorted(names)}")
+          print("wheel contains all three schemas")
+          PY
+
+      - name: Install the wheel and validate without the source tree
+        run: |
+          pip install dist/*.whl
+          cd "$RUNNER_TEMP"
+          python -c "
+          from edi_schema import SCHEMA_DIR, validate_episode
+          assert SCHEMA_DIR.is_dir(), SCHEMA_DIR
+          assert (SCHEMA_DIR / 'episode.schema.json').is_file()
+          assert validate_episode({}), 'an empty document must not validate'
+          print('installed wheel resolves schemas at', SCHEMA_DIR)
+          "
