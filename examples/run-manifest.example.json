@@ -1,5 +1,5 @@
 {
-  "$schema": "https://postoaklabs.github.io/engineering-decision-schema/run-manifest.schema.json",
+  "$schema": "https://ainumbers.co/research/engineering-decision-schema/schemas/run-manifest.schema.json",
   "design": {
     "name": "FIXTURE-design",
     "rtl_commit": "FIXTURE-not-a-real-commit"

@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://postoaklabs.github.io/engineering-decision-schema/episode.schema.json",
+  "$id": "https://ainumbers.co/research/engineering-decision-schema/schemas/episode.schema.json",
   "title": "Engineering Decision Episode",
   "description": "One recorded expert decision in a physical-design or proving flow: the state before, what was observed, what was considered and rejected, what was done, the state after, and the expert's judgment. Three document kinds share this repository's schema set (episode / run manifest / zkprof report).",
   "type": "object",

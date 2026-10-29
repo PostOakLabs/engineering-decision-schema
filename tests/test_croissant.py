@@ -68,7 +68,7 @@ def test_dataset_has_croissant_structure() -> None:
     assert document["conformsTo"] == CROISSANT_CONFORMS_URI
     assert document["@context"]["prov"] == "http://www.w3.org/ns/prov#"
     assert (
-        document["@context"]["edi"] == "https://postoaklabs.github.io/engineering-decision-schema/"
+        document["@context"]["edi"] == "https://ainumbers.co/research/engineering-decision-schema/"
     )
     # An empty corpus still produces a well-formed (if empty) dataset.
     assert document["recordSet"][0]["data"]["includes"] == []
