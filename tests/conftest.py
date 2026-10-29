@@ -56,7 +56,7 @@ def report() -> dict[str, Any]:
 def make_manifest(**overrides: Any) -> dict[str, Any]:
     """A valid run manifest. Keyword arguments replace whole top-level fields."""
     document: dict[str, Any] = {
-        "$schema": "https://postoaklabs.github.io/engineering-decision-schema/run-manifest.schema.json",
+        "$schema": "https://ainumbers.co/research/engineering-decision-schema/schemas/run-manifest.schema.json",
         "design": {"name": "ibex", "rtl_commit": "FIXTURE-not-a-real-commit"},
         "environment": {
             "librelane_version": "FIXTURE-not-a-real-version",

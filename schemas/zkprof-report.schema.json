@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://postoaklabs.github.io/engineering-decision-schema/zkprof-report.schema.json",
+  "$id": "https://ainumbers.co/research/engineering-decision-schema/schemas/zkprof-report.schema.json",
   "title": "zkprof Report",
   "description": "One profiling run of a proving workload on one target, with primitive-level timing attribution and the deployment context it was measured under. Deployment context (isolation, threads, timer resolution) is carried in the report itself, because the same code measures differently under COOP/COEP than it does without.",
   "type": "object",
@@ -164,6 +164,21 @@
       "type": "string",
       "minLength": 1,
       "description": "Optional reference to an edi-schema run-manifest document."
+    },
+    "backend_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Identity of the proving backend that produced this report."
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Backend implementation version, if the backend exposes one."
+    },
+    "commitment_scheme": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Polynomial commitment scheme the backend uses, if known."
     }
   }
 }

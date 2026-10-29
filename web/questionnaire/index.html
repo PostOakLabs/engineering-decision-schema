@@ -492,7 +492,7 @@ Every record is self-reported and uninterviewed (x_capture.self_reported).
       // `form` mirrors the DOM ids; this stays DOM-free so it is testable.
       function buildEpisode(form) {
         var doc = {};
-        doc.$schema = "https://postoaklabs.github.io/engineering-decision-schema/episode.schema.json";
+        doc.$schema = "https://ainumbers.co/research/engineering-decision-schema/schemas/episode.schema.json";
         doc.episode_id = form.episode_id || "EP-" + Date.now().toString(36).toUpperCase();
         doc.provenance = "retrospective";
         doc.design = { name: form["design-name"] || "", pdk: form["design-pdk"] || "" };
