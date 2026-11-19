@@ -22,7 +22,7 @@ from edi_schema import validate_episode
 def _valid_doc() -> dict[str, Any]:
     """A schema-shaped retrospective episode that is valid on its own."""
     return {
-        "$schema": "https://postoaklabs.github.io/engineering-decision-schema/episode.schema.json",
+        "$schema": "https://ainumbers.co/research/engineering-decision-schema/schemas/episode.schema.json",
         "episode_id": "EP-Q-001",
         "provenance": "retrospective",
         "design": {"name": "example block", "pdk": "28nm"},

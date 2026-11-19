@@ -4,10 +4,10 @@ build-backend = "hatchling.build"
 
 [project]
 name = "edi-schema"
-# Aligned with the release tag (v0.5.0: schema $id values moved to the
+# Aligned with the release tag (v0.6.0: schema $id values moved to the
 # engineering-decision-schema address). Kept in lockstep with
 # src/edi_schema/__init__.py __version__ by tests/test_version_sync.py — bump both together.
-version = "0.5.0"
+version = "0.6.0"
 description = "Shared episode schema: JSON Schemas and validation for engineering-decision episodes, run manifests, and ZK profile reports"
 readme = "README.md"
 requires-python = ">=3.11"

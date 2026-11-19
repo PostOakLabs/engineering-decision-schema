@@ -1,5 +1,5 @@
 {
-  "$schema": "https://postoaklabs.github.io/engineering-decision-schema/episode.schema.json",
+  "$schema": "https://ainumbers.co/research/engineering-decision-schema/schemas/episode.schema.json",
   "episode_id": "EXAMPLE-EP-REPRODUCED-001",
   "provenance": "synthetic-fixture",
   "design": {

@@ -23,7 +23,7 @@ Pinned by git tag. The package is not on a package index, so consumers
 reference the tag directly:
 
 ```bash
-pip install "git+https://github.com/PostOakLabs/engineering-decision-schema@v0.5.0"
+pip install "git+https://github.com/PostOakLabs/engineering-decision-schema@v0.6.0"
 ```
 
 For local development, from a checkout:

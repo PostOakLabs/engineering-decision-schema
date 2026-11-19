@@ -332,7 +332,7 @@ def build_croissant(
             "sc": "https://schema.org/",
             "cr": "http://mlcommons.org/croissant/",
             "prov": "http://www.w3.org/ns/prov#",
-            "edi": "https://postoaklabs.github.io/engineering-decision-schema/",
+            "edi": "https://ainumbers.co/research/engineering-decision-schema/",
             "dct": "http://purl.org/dc/terms/",
             "annotation": "cr:annotation",
             "equivalentProperty": "cr:equivalentProperty",

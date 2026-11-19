@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from conftest import codes, first_message
+from conftest import REPORT_EXAMPLE, codes, first_message, load_example
 from edi_schema import SHARE_TOLERANCE, validate_report
 
 
@@ -130,3 +130,30 @@ def test_deployment_context_fields_are_required(report: dict) -> None:
 def test_error_message_names_the_field(report: dict) -> None:
     report["primitives"] = [{"name": "msm", "ms": 1.0, "share": 1.2}]
     assert "primitives" in first_message(validate_report(report))
+
+
+@pytest.mark.parametrize("field", ["backend_id", "version", "commitment_scheme"])
+def test_backend_provenance_fields_are_accepted(report: dict, field: str) -> None:
+    """Each backend-provenance field is optional but must be a string when present."""
+    report[field] = "value"
+    assert validate_report(report) == []
+
+
+@pytest.mark.parametrize("field", ["backend_id", "version", "commitment_scheme"])
+def test_backend_provenance_fields_must_be_strings(report: dict, field: str) -> None:
+    report[field] = 1
+    assert "schema:type" in codes(validate_report(report))
+
+
+def test_backend_provenance_fields_are_optional(report: dict) -> None:
+    """Reports from backends that expose no identity still validate."""
+    for field in ("backend_id", "version", "commitment_scheme"):
+        report.pop(field, None)
+    assert validate_report(report) == []
+
+
+def test_example_carries_every_backend_provenance_field() -> None:
+    """The committed example exercises all three fields at once."""
+    example = load_example(REPORT_EXAMPLE)
+    for field in ("backend_id", "version", "commitment_scheme"):
+        assert isinstance(example.get(field), str) and example[field], field

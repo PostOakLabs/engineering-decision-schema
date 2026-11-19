@@ -1,5 +1,5 @@
 {
-  "$schema": "https://postoaklabs.github.io/engineering-decision-schema/zkprof-report.schema.json",
+  "$schema": "https://ainumbers.co/research/engineering-decision-schema/schemas/zkprof-report.schema.json",
   "report_version": "0.1.0",
   "target": {
     "kind": "native",
@@ -33,5 +33,8 @@
   },
   "crossOriginIsolated": false,
   "timer_resolution_us": 100.0,
-  "iterations": 1
+  "iterations": 1,
+  "backend_id": "gpu-prover-r0",
+  "version": "1.4.2",
+  "commitment_scheme": "KZG"
 }

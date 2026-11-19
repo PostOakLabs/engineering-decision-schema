@@ -36,7 +36,7 @@ def test_build_croissant_carries_the_cc_by_40_license(tmp_path: Path) -> None:
     from edi_schema.croissant import build_croissant
 
     episode = {
-        "$schema": "https://postoaklabs.github.io/engineering-decision-schema/episode.schema.json",
+        "$schema": "https://ainumbers.co/research/engineering-decision-schema/schemas/episode.schema.json",
         "episode_id": "EP-LIC-001",
         "provenance": "retrospective",
         "design": {"name": "example", "pdk": "28nm"},

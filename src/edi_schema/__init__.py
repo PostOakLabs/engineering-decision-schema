@@ -37,9 +37,9 @@ from edi_schema.validate import (
     validate_report,
 )
 
-# Aligned with the release tag (v0.5.0: schema $id values moved to the
+# Aligned with the release tag (v0.6.0: schema $id values moved to the
 # engineering-decision-schema address); hardcoded stamp, not derived — bump by hand.
-__version__ = "0.5.0"
+__version__ = "0.6.0"
 
 __all__ = [
     "CROISSANT_SPEC_URL",
